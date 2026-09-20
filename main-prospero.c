@@ -24,7 +24,6 @@ along with this program; see the file COPYING. If not, see
 
 #include <ps5/kernel.h>
 
-#include "kstuff_autopause.h"
 #include "main-common.h"
 #include "srv.h"
 #include "log.h"
@@ -123,10 +122,6 @@ main(int argc, char* argv[]) {
     FTP_LOG_PUTS("Unable to change AuthID");
     return EXIT_FAILURE;
   }
-
-#ifdef KSTUFF_AUTOPAUSE
-  kstuff_autopause_init();
-#endif
 
   while(1) {
     rc = ftp_serve(port, notify_user);
