@@ -106,7 +106,6 @@ static ftp_command_t commands[] = {
   {"KILL", ftp_cmd_KILL},
   {"MTRW", ftp_cmd_MTRW},
   {"AUTHID", ftp_cmd_AUTHID},
-  {"COMP", ftp_cmd_COMP},
   {"SELF", ftp_cmd_SELF},
   {"SCHK", ftp_cmd_SELFCHK},
   {"CHMOD", ftp_cmd_CHMOD},

@@ -6317,7 +6317,6 @@ ftp_cmd_FEAT(ftp_env_t *env, const char *arg) {
                            " EPRT\r\n"
                            " KILL\r\n"
                            " MTRW\r\n"
-                           " COMP\r\n"
                            " STOP\r\n"
                            " SELF\r\n"
                            " SCHK\r\n"
@@ -6333,7 +6332,6 @@ ftp_cmd_FEAT(ftp_env_t *env, const char *arg) {
                            " SITE UPPER\r\n"
                            " SITE STOP\r\n"
                            " SITE AUTHID\r\n"
-                           " SITE COMP\r\n"
                            " UTF8\r\n"
                            " REST STREAM\r\n"
                            "211 End\r\n");
@@ -6527,9 +6525,9 @@ ftp_cmd_HELP(ftp_env_t *env, const char *arg) {
                            "214-Commands:\r\n"
                            " USER PASS PWD CWD CDUP TYPE SIZE DSIZ MDTM AVBL\r\n"
                            " LIST NLST MLSD MLST RETR STOR APPE\r\n"
-                           " DELE RMD RMDA MKD RNFR RNTO REST LOWER UPPER STOP XQUOTA COMP\r\n"
+                           " DELE RMD RMDA MKD RNFR RNTO REST LOWER UPPER STOP XQUOTA\r\n"
                            " PASV PORT EPSV EPRT SYST NOOP QUIT\r\n"
-                           " SITE CHMOD UMASK SYMLINK RMDIR CPFR CPTO COPY MOVE LOWER UPPER STOP AUTHID COMP\r\n"
+                           " SITE CHMOD UMASK SYMLINK RMDIR CPFR CPTO COPY MOVE LOWER UPPER STOP AUTHID\r\n"
                            "214 End\r\n");
 }
 
