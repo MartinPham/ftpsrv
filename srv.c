@@ -354,11 +354,8 @@ ftp_thread(void *args) {
   memset(env.rename_path, 0, sizeof(env.rename_path));
   memset(env.copy_path, 0, sizeof(env.copy_path));
   memset(&env.data_addr, 0, sizeof(env.data_addr));
-  env.xfer_buf_size = IO_COPY_BUFSIZE;
-  env.xfer_buf = malloc(env.xfer_buf_size);
-  if(!env.xfer_buf) {
-    env.xfer_buf_size = 0;
-  }
+  env.xfer_buf_size = 0;
+  env.xfer_buf = NULL;
   memset(&reader, 0, sizeof(reader));
   reader.fd = env.active_fd;
 
