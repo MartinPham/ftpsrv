@@ -76,8 +76,12 @@ john@localhost:ftpsrv$ make -f Makefile.ps5
 Assuming you have a compiler toolchain installed on your GNU/Linux system,
 the FTP server can be compiled using the following command:
 ```console
-john@localhost:ftpsrv$ make -f Makefile.posix
+john@localhost:ftpsrv$ make -f Makefile.linux
 ```
+
+Run local regression checks (requires Python 3) with
+`make -f Makefile.linux check`. The checks launch their own server on a temporary
+port and use temporary directories for all file transfers.
 
 ## Known issues
 Some PS5 firmwares below vesion 4 contains a kernel bug where reading from some SELF

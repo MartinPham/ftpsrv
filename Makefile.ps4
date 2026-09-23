@@ -31,11 +31,14 @@ CFLAGS := $(CFLAGS) -Wall -Werror -DVERSION_TAG=\"$(VERSION_TAG)\" -I. -O3 -DNDE
 SOURCE := srv.c cmd.c notify.c io.c self.c sha256.c
 SOURCE += main-orbis.c cmd-orbis.c self-orbis.c
 SOURCE += io-freebsd.c
+HEADERS := $(wildcard *.h)
+
+.PHONY: all clean test
 
 all: $(ELF)
 
-$(ELF): $(SOURCE)
-	$(CC) $(CFLAGS) -o $@ $^
+$(ELF): $(SOURCE) $(HEADERS) Makefile.ps4
+	$(CC) $(CFLAGS) -o $@ $(SOURCE)
 
 clean:
 	rm -f *.elf

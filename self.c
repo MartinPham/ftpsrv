@@ -39,7 +39,7 @@ static pthread_mutex_t g_mutex = PTHREAD_MUTEX_INITIALIZER;
 /**
  * Convert an ELF/SELF file range to safe I/O arguments.
  **/
-static int
+static inline int
 self_io_range(uint64_t off, uint64_t len, off_t *off_out, size_t *len_out,
               uint64_t *end_out) {
   uint64_t max = (uint64_t)INT64_MAX;
@@ -61,7 +61,7 @@ self_io_range(uint64_t off, uint64_t len, off_t *off_out, size_t *len_out,
 }
 
 
-static int
+static inline int
 self_u64_add_to_off(uint64_t off, uint64_t add, off_t *out) {
   uint64_t max = (uint64_t)INT64_MAX;
 

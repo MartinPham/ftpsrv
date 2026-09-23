@@ -33,11 +33,14 @@ CFLAGS := $(CFLAGS) -Wall -Werror -DVERSION_TAG=\"$(VERSION_TAG)\" -I. -O3 -DNDE
 SOURCE := srv.c cmd.c cmd-proc.c notify.c io.c self.c sha256.c
 SOURCE += main-prospero.c cmd-prospero.c self-prospero.c
 SOURCE += io-freebsd.c
+HEADERS := $(wildcard *.h)
+
+.PHONY: all clean test
 
 all: $(ELF)
 
-$(ELF): $(SOURCE)
-	$(CC) $(CFLAGS) -o $@ $^
+$(ELF): $(SOURCE) $(HEADERS) Makefile.ps5
+	$(CC) $(CFLAGS) -o $@ $(SOURCE)
 	@$(if $(ELF_STRIP),$(ELF_STRIP) --strip-all $@,:)
 
 clean:
