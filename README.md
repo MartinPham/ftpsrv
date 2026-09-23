@@ -83,6 +83,12 @@ Run local regression checks (requires Python 3) with
 `make -f Makefile.linux check`. The checks launch their own server on a temporary
 port and use temporary directories for all file transfers.
 
+Socket buffers are requested before connection establishment and verified with
+`getsockopt`. If the OS rejects a buffer size request, the server logs the error
+and uses the current buffer if it is valid. Define `FTP_DEBUG_SOCKET_BUFFERS`
+when compiling to log requested and actual buffer sizes; actual values are
+reported as returned by the OS (Linux includes accounting overhead).
+
 ## Known issues
 Some PS5 firmwares below vesion 4 contains a kernel bug where reading from some SELF
 files causes the read syscall to stall.

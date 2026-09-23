@@ -36,8 +36,15 @@ $(ELF): $(SOURCE) $(HEADERS) Makefile.linux
 	@mkdir -p .build
 	$(CC) $(CFLAGS) -o $@ test/test-control.c $(filter-out main-linux.c,$(SOURCE))
 
-check: $(ELF) .build/test-control
+.build/test-sockets: test/test-sockets.c $(filter-out main-linux.c,$(SOURCE)) $(HEADERS) Makefile.linux
+	@mkdir -p .build
+	$(CC) $(CFLAGS) -o $@ test/test-sockets.c $(filter-out main-linux.c,$(SOURCE)) \
+		-Wl,--wrap=socket,--wrap=accept,--wrap=connect,--wrap=listen \
+		-Wl,--wrap=setsockopt,--wrap=getsockopt,--wrap=close
+
+check: $(ELF) .build/test-control .build/test-sockets
 	./.build/test-control
+	./.build/test-sockets
 	python3 test/test-transfers.py ./$(ELF)
 
 clean:

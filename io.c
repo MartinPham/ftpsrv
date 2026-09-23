@@ -26,6 +26,7 @@ along with this program; see the file COPYING. If not, see
 #include <sys/errno.h>
 
 #include "io.h"
+#include "log.h"
 
 #ifndef FTP_CTRL_TIMEOUT_SEC
 #define FTP_CTRL_TIMEOUT_SEC 600
@@ -245,18 +246,53 @@ io_ncopy_buf(int fd_in, int fd_out, size_t size, void* buf, size_t bufsize) {
 }
 
 /**
+ * Request a buffer size, then verify the size accepted by the OS. A tuning
+ * request may exceed the platform limit; retain a usable default in that case.
+ **/
+static int
+io_set_socket_buffer(int fd, int option, const char *name, int requested) {
+  int actual = 0;
+  socklen_t len = sizeof(actual);
+
+  if(setsockopt(fd, SOL_SOCKET, option, &requested, sizeof(requested)) < 0) {
+    int err = errno;
+    FTP_LOG_PRINTF("socket %d: setsockopt(%s, %d): %s; checking current buffer\n",
+                   fd, name, requested, strerror(err));
+  }
+  if(getsockopt(fd, SOL_SOCKET, option, &actual, &len) < 0) {
+    return -1;
+  }
+  if(len != sizeof(actual) || actual <= 0) {
+    errno = EIO;
+    return -1;
+  }
+
+#ifdef FTP_DEBUG_SOCKET_BUFFERS
+  // Report raw OS values: Linux includes accounting overhead in this value.
+  FTP_LOG_PRINTF("socket %d: %s requested=%d actual=%d\n",
+                 fd, name, requested, actual);
+#endif
+  return 0;
+}
+
+int
+io_set_socket_buffers(int fd, int is_data) {
+  int buf = is_data ? IO_SOCK_DATA_BUFSIZE : IO_SOCK_CTRL_BUFSIZE;
+
+  if(io_set_socket_buffer(fd, SO_SNDBUF, "SO_SNDBUF", buf) < 0 ||
+     io_set_socket_buffer(fd, SO_RCVBUF, "SO_RCVBUF", buf) < 0) {
+    return -1;
+  }
+  return 0;
+}
+
+/**
  * Configure socket buffers, timeouts, and keepalive settings.
  **/
 int
 io_set_socket_opts(int fd, int is_data) {
-  int rc = 0;
-  int buf = is_data ? IO_SOCK_DATA_BUFSIZE : IO_SOCK_CTRL_BUFSIZE;
-
-  if(setsockopt(fd, SOL_SOCKET, SO_SNDBUF, &buf, sizeof(buf)) < 0) {
-    rc = -1;
-  }
-  if(setsockopt(fd, SOL_SOCKET, SO_RCVBUF, &buf, sizeof(buf)) < 0) {
-    rc = -1;
+  if(io_set_socket_buffers(fd, is_data) < 0) {
+    return -1;
   }
 
   int timeout_sec = is_data ? FTP_DATA_TIMEOUT_SEC : FTP_CTRL_TIMEOUT_SEC;
@@ -265,10 +301,10 @@ io_set_socket_opts(int fd, int is_data) {
     memset(&tv, 0, sizeof(tv));
     tv.tv_sec = timeout_sec;
     if(setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv)) < 0) {
-      rc = -1;
+      return -1;
     }
     if(setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0) {
-      rc = -1;
+      return -1;
     }
   }
 
@@ -294,10 +330,10 @@ io_set_socket_opts(int fd, int is_data) {
 #ifdef TCP_NODELAY
   if(!is_data) {
     if(setsockopt(fd, IPPROTO_TCP, TCP_NODELAY,  &(int){1}, sizeof(int)) < 0) {
-      rc = -1;
+      return -1;
     }
   }
 #endif
 
-  return rc;
+  return 0;
 }

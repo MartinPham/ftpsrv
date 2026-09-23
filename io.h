@@ -88,6 +88,15 @@ int io_pcopy(int fd_in, int fd_out, off_t off_in, off_t off_out, size_t n);
 
 
 /**
- * Apply socket buffer sizes and latency settings.
+ * Request and verify socket buffer sizes before listen/connect. Oversized
+ * tuning requests may fall back to the current usable buffers. Define
+ * FTP_DEBUG_SOCKET_BUFFERS to log requested and actual sizes.
+ **/
+int io_set_socket_buffers(int fd, int is_data);
+
+
+/**
+ * Apply socket buffers, timeouts, and latency settings. Returns -1 with errno
+ * set if mandatory settings cannot be applied or buffers cannot be verified.
  **/
 int io_set_socket_opts(int fd, int is_data);

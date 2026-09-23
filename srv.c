@@ -359,9 +359,12 @@ ftp_thread(void *args) {
   memset(&reader, 0, sizeof(reader));
   reader.fd = env.active_fd;
 
-  io_set_socket_opts(env.active_fd, 0);
-
-  running = !ftp_greet(&env);
+  if(io_set_socket_opts(env.active_fd, 0) < 0) {
+    FTP_LOG_PERROR("io_set_socket_opts(control)");
+    running = false;
+  } else {
+    running = !ftp_greet(&env);
+  }
 
   while(running) {
     if(!(line = ftp_readline(&reader))) {
@@ -493,6 +496,16 @@ ftp_serve(uint16_t port, int notify_user) {
 
   if((srvfd=socket(AF_INET, SOCK_STREAM, 0)) < 0) {
     FTP_LOG_PERROR("socket");
+    return -1;
+  }
+
+  // Configure the receive window before the handshake, without putting an
+  // idle timeout on the server's main accept loop.
+  if(io_set_socket_buffers(srvfd, 0) < 0) {
+    int saved_errno = errno;
+    FTP_LOG_PERROR("io_set_socket_buffers(control listener)");
+    close(srvfd);
+    errno = saved_errno;
     return -1;
   }
 

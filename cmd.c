@@ -190,12 +190,21 @@ ftp_data_open(ftp_env_t *env) {
         return -1;
       }
     }
+    if(io_set_socket_opts(env->data_fd, 1) < 0) {
+      int saved_errno = errno;
+      FTP_LOG_PERROR("io_set_socket_opts(active data)");
+      ftp_data_close(env);
+      errno = saved_errno;
+      return -1;
+    }
     while(connect(env->data_fd, (struct sockaddr*)&env->data_addr,
                   sizeof(env->data_addr)) != 0) {
       if(errno == EINTR) {
         continue;
       }
+      int saved_errno = errno;
       ftp_data_close(env);
+      errno = saved_errno;
       return -1;
     }
   } else {
@@ -233,9 +242,15 @@ ftp_data_open(ftp_env_t *env) {
       errno = EACCES;
       return -1;
     }
+    // Reapply per-connection settings rather than relying on inheritance.
+    if(io_set_socket_opts(env->data_fd, 1) < 0) {
+      int saved_errno = errno;
+      FTP_LOG_PERROR("io_set_socket_opts(passive data)");
+      ftp_data_close(env);
+      errno = saved_errno;
+      return -1;
+    }
   }
-
-  io_set_socket_opts(env->data_fd, 1);
 
   return 0;
 }
@@ -473,7 +488,8 @@ ftp_close_data_fds(ftp_env_t *env) {
 }
 
 /**
- * Send a 550 reply and close passive socket.
+ * Send a 550 reply and close passive socket. Return 1 if the error was
+ * reported, or -1 if the control connection failed.
  **/
 static int
 ftp_perror_close_passive(ftp_env_t *env) {
@@ -482,7 +498,7 @@ ftp_perror_close_passive(ftp_env_t *env) {
     close(env->passive_fd);
     env->passive_fd = -1;
   }
-  return ret;
+  return ret < 0 ? -1 : 1;
 }
 
 /**
@@ -526,7 +542,14 @@ ftp_listen_passive(ftp_env_t *env, uint16_t *port_out) {
   *port_out = 0;
 
   if((env->passive_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-    return ftp_perror(env);
+    return ftp_perror_close_passive(env);
+  }
+
+  if(io_set_socket_opts(env->passive_fd, 1) < 0) {
+    int saved_errno = errno;
+    FTP_LOG_PERROR("io_set_socket_opts(passive listener)");
+    errno = saved_errno;
+    return ftp_perror_close_passive(env);
   }
 
   if(setsockopt(env->passive_fd, SOL_SOCKET, SO_REUSEADDR, &(int){1},
@@ -914,7 +937,7 @@ ftp_cmd_PASV(ftp_env_t *env, const char* arg) {
 
   ret = ftp_listen_passive(env, &port);
   if(ret) {
-    return ret;
+    return ret < 0 ? ret : 0;
   }
   uint32_t ip = ntohl(addr);
   uint16_t p = port;
@@ -949,7 +972,7 @@ ftp_cmd_EPSV(ftp_env_t *env, const char *arg) {
 
   ret = ftp_listen_passive(env, &port);
   if(ret) {
-    return ret;
+    return ret < 0 ? ret : 0;
   }
 
   return ftp_active_printf(env,
