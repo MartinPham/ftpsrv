@@ -482,7 +482,7 @@ ftp_serve(uint16_t port, int notify_user) {
     }
 
     if(notify_user) {
-      notify("Serving FTP on %s:%d (%s)", ip, port, ifa->ifa_name);
+      notify("FTP %s:%d (%s)", ip, port, ifa->ifa_name);
     }
 
     ifaddr_wait = 0;
